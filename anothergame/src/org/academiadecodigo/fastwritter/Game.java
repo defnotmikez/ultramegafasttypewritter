@@ -35,7 +35,7 @@ public class Game {
             this.serverSocket = new ServerSocket(this.port);
 
             ExecutorService playerThreads = Executors.newFixedThreadPool(4);
-            while (true) {
+            while (connections != MAX_PLAYERS) {
                 Socket clientSocket = this.serverSocket.accept();
 
                 clientHandler = new ClientHandler(clientSocket,this);
@@ -49,8 +49,11 @@ public class Game {
                 broadCast(connectionMessage);
                 System.out.println(connections);
 
-                playerThreads.submit(clientHandler);
+                players.add(clientHandler);
 
+            }
+            for (int i = 0; i < players.size(); i++) {
+                playerThreads.submit(players.get(i));
 
             }
 
@@ -67,13 +70,21 @@ public class Game {
 
             while(true){
                 System.out.println("comparação");
+
                 String word = wordToCompare();
+
                 System.out.println(word);
-                broadCast(word);
+
                 String read = in.readLine();
+
                 System.out.println(read);
+
+                broadCast(word);
+
                 compare(read,word);
+
                 System.out.println(player.score);
+
                 if(player.score == FINAL_SCORE){
                     break;
                 }
@@ -90,7 +101,7 @@ public class Game {
         return words[i];
     }
 
-    public void compare(String read, String word){
+    public synchronized void compare(String read, String word){
             if(read.equals(word) && players.get(0) == players.get(0)){
             players.get(0).score++;
 

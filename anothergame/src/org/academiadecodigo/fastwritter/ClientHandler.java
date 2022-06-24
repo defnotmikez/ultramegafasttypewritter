@@ -20,7 +20,6 @@ public class ClientHandler implements Runnable{
 
     @Override
     public void run() {
-    players.add(this);
     game.dispatch(this);
 
     }
