@@ -1,5 +1,6 @@
 package org.academiadecodigo.fastwritter;
 
+import org.academiadecodigo.bootcamp.scanners.menu.MenuInputScanner;
 import org.academiadecodigo.bootcamp.scanners.string.StringSetInputScanner;
 
 import java.io.BufferedReader;
@@ -31,14 +32,14 @@ public class Game {
         ClientHandler clientHandler;
         System.out.println("start");
         try {
-            int connections=0;
+            int connections = 0;
             this.serverSocket = new ServerSocket(this.port);
 
             ExecutorService playerThreads = Executors.newFixedThreadPool(4);
             while (connections != MAX_PLAYERS) {
                 Socket clientSocket = this.serverSocket.accept();
 
-                clientHandler = new ClientHandler(clientSocket,this);
+                clientHandler = new ClientHandler(clientSocket, this);
                 connections++;
                 clientHandler.setName(DEFAULT_NAME + connections);
                 System.out.println(connections);
@@ -63,29 +64,31 @@ public class Game {
         }
     }
 
-    public void dispatch(ClientHandler player){
+    public void dispatch(ClientHandler player) {
         System.out.println("dispatch");
-        try{
+        try {
             BufferedReader in = new BufferedReader(new InputStreamReader(player.getClientSocket().getInputStream()));
 
-            while(true){
+            while (true) {
+                startCountdown();
                 System.out.println("comparação");
 
                 String word = wordToCompare();
 
                 System.out.println(word);
 
+                //read block devia estar depois do broadcast da word (l 82) (?)
                 String read = in.readLine();
 
                 System.out.println(read);
 
                 broadCast(word);
 
-                compare(read,word);
+                compare(read, word);
 
                 System.out.println(player.score);
 
-                if(player.score == FINAL_SCORE){
+                if (player.score == FINAL_SCORE) {
                     break;
                 }
             }
@@ -96,27 +99,26 @@ public class Game {
     }
 
     private String wordToCompare() {
-        String[] words = {"word1","word2"};
-        int i = (int) Math.abs(Math.random()* words.length);
+        String[] words = {"word1", "word2", "colonel", "scissors", "quinoa", "address", "intelligence", "weird", "harass", "broadcast", "scarce", "inspire", "temperature", "specific", "suburban", "broccoli", "vacuum", "bourbon", "nauseous", "grateful", "lightning", "deviation", "congress", "wind", "pavement", "monstrous", "reception", "stride", "inhibition", "socialist", "discrimination", "approval", "answer", "gregarious", "dominate", "strikebreaker", "nomination", "technology", "conversation", "contraction", "dome", "possibility", "sunshine", "punish", "timetable", "accessible", "unrest", "spirit", "policeman", "utter", "weapon", "shortage", "experience", "audience", "operation", "emphasis", "credibility", "flourish", "majority", "vertical", "pumpkin", "version", "ecstasy", "steward", "healthy", "alcohol", "nightmare", "timetable", "digress", "measure", "marble", "witness", "restaurant", "disappear", "mosquito", "landowner", "landmower", "scenario", "industry", "shiver", "tragedy", "impound", "available", "transition", "demonstration", "paragraph", "prevalence", "joystick", "pornhub", "qualified", "wilderness", "survival", "enfix", "fortune", "mutual", "theory", "pattern", "premature", "temptation", "brainstorm", "empirical", "scramble", "elaborate", "judge", "characteristic", "cemetery", "recovery", "snatch", "sensitivity", "flourish", "electron", "pneumonia"};
+        int i = (int) Math.abs(Math.random() * words.length);
         return words[i];
     }
 
-    public synchronized void compare(String read, String word){
-            if(read.equals(word) && players.get(0) == players.get(0)){
+    public synchronized void compare(String read, String word) {
+        if (read.equals(word) && players.get(0) == players.get(0)) {
             players.get(0).score++;
 
-            }
+        }
 
 
     }
 
 
-
     private synchronized void broadCast(String message) {
-        for(ClientHandler player : this.players){
+        for (ClientHandler player : this.players) {
             System.out.println("BC");
-            try{
-                PrintWriter outPlayer = new PrintWriter(player.getClientSocket().getOutputStream(),true);
+            try {
+                PrintWriter outPlayer = new PrintWriter(player.getClientSocket().getOutputStream(), true);
                 outPlayer.println(message);
                 System.out.println(message);
             } catch (Exception e) {
@@ -129,4 +131,51 @@ public class Game {
     /*public ClientHandler getClientHandler() {
         return clientHandler;
     }*/
+    private synchronized void startCountdown() {
+        for (ClientHandler player : this.players) {
+            System.out.println("BC");
+            try {
+                PrintWriter outPlayer = new PrintWriter(player.getClientSocket().getOutputStream(), true);
+                outPlayer.println("Game will start in...");
+                System.out.println("Game will start in...");
+                this.wait(1000);
+                outPlayer.println("5");
+
+                this.wait(1000);
+                outPlayer.println("4");
+
+                this.wait(1000);
+                outPlayer.println("3");
+
+                this.wait(1000);
+                outPlayer.println("2");
+
+                this.wait(1000);
+                outPlayer.println("1");
+
+
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
+    private void endGameScoreboard () {
+
+        for (ClientHandler player : this.players) {
+            String[] finalScores = {String.valueOf(player.score)};
+
+            MenuInputScanner scanner = new MenuInputScanner(finalScores);
+            //devo tar a fazer 4x player1 score
+            //devo precisar de outra iteração pelos scores
+
+            scanner.setMessage("Final score was: " + "\n" +
+                    player.getName() + " :" + player.score + "\n" +
+                    player.getName() + " :" + player.score + "\n" +
+                    player.getName() + " :" + player.score + "\n" +
+                    player.getName() + " :" + player.score + "\n"
+            );
+
+
+        }
+    }
 }
