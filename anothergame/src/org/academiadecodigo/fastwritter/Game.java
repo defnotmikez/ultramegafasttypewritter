@@ -16,7 +16,7 @@ import java.util.concurrent.Executors;
 
 public class Game {
     private final int FINAL_SCORE = 5;
-    private final int MAX_PLAYERS = 2;
+    private final int MAX_PLAYERS = 4;
     private final String DEFAULT_NAME = "Player ";
     //private ClientHandler clientHandler;
     private ServerSocket serverSocket;
@@ -35,7 +35,7 @@ public class Game {
             int connections = 0;
             this.serverSocket = new ServerSocket(this.port);
 
-            ExecutorService playerThreads = Executors.newFixedThreadPool(4);
+            ExecutorService playerThreads = Executors.newFixedThreadPool(MAX_PLAYERS);
             while (connections != MAX_PLAYERS) {
                 Socket clientSocket = this.serverSocket.accept();
 
@@ -45,7 +45,7 @@ public class Game {
                 System.out.println(connections);
 
 
-                String connectionMessage = clientHandler.getName() + " : has connected.";
+                String connectionMessage =  connections + "/" + MAX_PLAYERS + " players connected." ;
                 System.out.println(connectionMessage);
                 broadCast(connectionMessage);
                 System.out.println(connections);
@@ -57,7 +57,7 @@ public class Game {
                 playerThreads.submit(players.get(i));
 
             }
-
+        startCountdown();
 
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -65,24 +65,30 @@ public class Game {
     }
 
     public void dispatch(ClientHandler player) {
+        try {
+            Thread.sleep(11000);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
         System.out.println("dispatch");
         try {
-            BufferedReader in = new BufferedReader(new InputStreamReader(player.getClientSocket().getInputStream()));
 
+            BufferedReader in = new BufferedReader(new InputStreamReader(player.getClientSocket().getInputStream()));
+            //startCountdown();
             while (true) {
-                startCountdown();
+
                 System.out.println("comparação");
 
                 String word = wordToCompare();
 
                 System.out.println(word);
-
+                broadCast(word);
                 //read block devia estar depois do broadcast da word (l 82) (?)
                 String read = in.readLine();
 
                 System.out.println(read);
 
-                broadCast(word);
+
 
                 compare(read, word);
 
@@ -173,6 +179,7 @@ public class Game {
                     player.getName() + " :" + player.score + "\n" +
                     player.getName() + " :" + player.score + "\n" +
                     player.getName() + " :" + player.score + "\n"
+
             );
 
 
