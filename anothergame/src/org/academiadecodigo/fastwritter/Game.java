@@ -1,34 +1,44 @@
 package org.academiadecodigo.fastwritter;
 
 import org.academiadecodigo.bootcamp.scanners.menu.MenuInputScanner;
-import org.academiadecodigo.bootcamp.scanners.string.StringSetInputScanner;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class Game {
-    private final int FINAL_SCORE = 5;
-    private final int MAX_PLAYERS = 4;
+    public final int FINAL_SCORE = 15;
+    public final int MAX_PLAYERS = 2;
     private final String DEFAULT_NAME = "Player ";
+    public ArrayList<ClientHandler> winners;
     //private ClientHandler clientHandler;
     private ServerSocket serverSocket;
     private final int port;
     public ArrayList<ClientHandler> players = new ArrayList<>();
+    private int userReadyCounter;
+    LinkedList<String> wordOcean = new LinkedList<>(Arrays.asList("colonel", "scissors", "quinoa", "address", "intelligence", "weird", "harass", "broadcast", "scarce", "inspire", "temperature", "specific", "suburban", "broccoli", "vacuum", "bourbon", "nauseous", "grateful", "lightning", "deviation", "congress", "wind", "pavement", "monstrous", "reception", "stride", "inhibition", "socialist", "discrimination", "approval", "answer", "gregarious", "dominate", "strikebreaker", "nomination", "technology", "conversation", "contraction", "dome", "possibility", "sunshine", "punish", "timetable", "accessible", "unrest", "spirit", "policeman", "utter", "weapon", "shortage", "experience", "audience", "operation", "emphasis", "credibility", "flourish", "majority", "vertical", "pumpkin", "version", "ecstasy", "steward", "healthy", "alcohol", "nightmare", "timetable", "digress", "measure", "marble", "witness", "restaurant", "disappear", "mosquito", "landowner", "landmower", "scenario", "industry", "shiver", "tragedy", "impound", "available", "transition", "demonstration", "paragraph", "prevalence", "joystick", "pornhub", "qualified", "wilderness", "survival", "enfix", "fortune", "mutual", "theory", "pattern", "premature", "temptation", "brainstorm", "empirical", "scramble", "elaborate", "judge", "characteristic", "cemetery", "recovery", "snatch", "sensitivity", "flourish", "electron", "pneumonia"));
+    public String[] wordToPlay;
+
+    public int getUserReadyCounter() {
+        return userReadyCounter;
+    }
+
+    public void setUserReadyCounter(int userReadyCounter) {
+        this.userReadyCounter = userReadyCounter;
+    }
 
     public Game(int port) {
         this.port = port;
+        this.wordToPlay = wordToCompare();
 
     }
 
-    public void start() {
+    public void listen() {
         ClientHandler clientHandler;
         System.out.println("start");
         try {
@@ -41,94 +51,76 @@ public class Game {
 
                 clientHandler = new ClientHandler(clientSocket, this);
                 connections++;
-                clientHandler.setName(DEFAULT_NAME + connections);
-                System.out.println(connections);
 
 
-                String connectionMessage =  connections + "/" + MAX_PLAYERS + " players connected." ;
+                String connectionMessage = connections + "/" + MAX_PLAYERS + " players connected.";
                 System.out.println(connectionMessage);
                 broadCast(connectionMessage);
-                System.out.println(connections);
-
                 players.add(clientHandler);
 
             }
+            startCountdown();
             for (int i = 0; i < players.size(); i++) {
                 playerThreads.submit(players.get(i));
-
+                System.out.println("test");
             }
-        startCountdown();
+
 
         } catch (IOException e) {
             throw new RuntimeException(e);
-        }
-    }
 
-    public void dispatch(ClientHandler player) {
-        try {
-            Thread.sleep(11000);
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
-        System.out.println("dispatch");
-        try {
-
-            BufferedReader in = new BufferedReader(new InputStreamReader(player.getClientSocket().getInputStream()));
-            //startCountdown();
-            while (true) {
-
-                System.out.println("comparação");
-
-                String word = wordToCompare();
-
-                System.out.println(word);
-                broadCast(word);
-                //read block devia estar depois do broadcast da word (l 82) (?)
-                String read = in.readLine();
-
-                System.out.println(read);
 
 
+    }
 
-                compare(read, word);
 
-                System.out.println(player.score);
+    String[] wordToCompare() {
+        LinkedList<String> wordToPlay = new LinkedList<>();
+        for (int j = 0; j < FINAL_SCORE; j++) {
+            String word = generateWord();
 
-                if (player.score == FINAL_SCORE) {
-                    break;
-                }
+            while(wordToPlay.contains(word) && !wordToPlay.isEmpty()){
+                word = generateWord();
             }
-
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+            wordToPlay.add(word);
         }
-    }
-
-    private String wordToCompare() {
-        String[] words = {"word1", "word2", "colonel", "scissors", "quinoa", "address", "intelligence", "weird", "harass", "broadcast", "scarce", "inspire", "temperature", "specific", "suburban", "broccoli", "vacuum", "bourbon", "nauseous", "grateful", "lightning", "deviation", "congress", "wind", "pavement", "monstrous", "reception", "stride", "inhibition", "socialist", "discrimination", "approval", "answer", "gregarious", "dominate", "strikebreaker", "nomination", "technology", "conversation", "contraction", "dome", "possibility", "sunshine", "punish", "timetable", "accessible", "unrest", "spirit", "policeman", "utter", "weapon", "shortage", "experience", "audience", "operation", "emphasis", "credibility", "flourish", "majority", "vertical", "pumpkin", "version", "ecstasy", "steward", "healthy", "alcohol", "nightmare", "timetable", "digress", "measure", "marble", "witness", "restaurant", "disappear", "mosquito", "landowner", "landmower", "scenario", "industry", "shiver", "tragedy", "impound", "available", "transition", "demonstration", "paragraph", "prevalence", "joystick", "pornhub", "qualified", "wilderness", "survival", "enfix", "fortune", "mutual", "theory", "pattern", "premature", "temptation", "brainstorm", "empirical", "scramble", "elaborate", "judge", "characteristic", "cemetery", "recovery", "snatch", "sensitivity", "flourish", "electron", "pneumonia"};
-        int i = (int) Math.abs(Math.random() * words.length);
-        return words[i];
-    }
-
-    public synchronized void compare(String read, String word) {
-        if (read.equals(word) && players.get(0) == players.get(0)) {
-            players.get(0).score++;
-
+        for (String s : wordToPlay) {
+            System.out.println(s);
         }
+        return wordToPlay.toArray(new String[0]);
+    }
 
-
+    private String generateWord() {
+        int rand = (int) Math.abs(Math.random() * wordOcean.size());
+        return wordOcean.get(rand);
     }
 
 
-    private synchronized void broadCast(String message) {
+    public synchronized void broadCast(String message) {
         for (ClientHandler player : this.players) {
-            System.out.println("BC");
+
             try {
-                PrintWriter outPlayer = new PrintWriter(player.getClientSocket().getOutputStream(), true);
-                outPlayer.println(message);
+                player.outPlayer.println(message);
                 System.out.println(message);
             } catch (Exception e) {
                 throw new RuntimeException(e);
+            }
+        }
+    }
+
+    synchronized void sendMessage(ClientHandler player, String message) {
+        for (ClientHandler player1 : this.players) {
+
+            if (player == player1) {
+                try {
+                    player.outPlayer.println(message);
+                    System.out.println(message);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
             }
         }
     }
@@ -137,9 +129,26 @@ public class Game {
     /*public ClientHandler getClientHandler() {
         return clientHandler;
     }*/
-    private synchronized void startCountdown() {
-        for (ClientHandler player : this.players) {
-            System.out.println("BC");
+    synchronized void startCountdown() throws InterruptedException {
+
+        broadCast("Game will start in...");
+        this.wait(1000);
+        broadCast("5");
+        this.wait(1000);
+        broadCast("4");
+        this.wait(1000);
+        broadCast("3");
+        this.wait(1000);
+        broadCast("2");
+        this.wait(1000);
+        broadCast("1");
+        this.wait(1000);
+
+
+
+
+  /*      for (ClientHandler player : this.players) {
+
             try {
                 PrintWriter outPlayer = new PrintWriter(player.getClientSocket().getOutputStream(), true);
                 outPlayer.println("Game will start in...");
@@ -163,9 +172,10 @@ public class Game {
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
-        }
+        }*/
     }
-    private void endGameScoreboard () {
+
+    private void endGameScoreboard() {
 
         for (ClientHandler player : this.players) {
             String[] finalScores = {String.valueOf(player.score)};
