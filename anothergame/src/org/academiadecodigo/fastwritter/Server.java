@@ -13,7 +13,7 @@ public class Server {
 
         final int PORT = 6969;
          Game game = new Game(PORT);
-
+         System.out.println("Running on port: " + PORT);
          game.listen();
 
     }

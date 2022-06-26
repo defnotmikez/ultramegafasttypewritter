@@ -80,9 +80,7 @@ public class Game {
             }
             wordToPlay.add(word);
         }
-        for (String s : wordToPlay) {
-            System.out.println(s);
-        }
+
         return wordToPlay.toArray(new String[0]);
     }
 
