@@ -79,7 +79,7 @@ public class ClientHandler implements Runnable {
     }
 
     public void setName() throws IOException, InterruptedException {
-        game.sendMessage(this, "Choose a name fag");
+        game.sendMessage(this, "Choose a name");
         this.name = in.readLine();
         if(this.name != ""){
             this.setName(this.name);}
